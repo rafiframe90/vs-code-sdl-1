@@ -15,7 +15,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up GCC (MinGW) 🛠️
-      uses: egor-tisin/setup-mingw@v2
+      uses: rizsotto/setup-mingw@v2
+      with:
+        version: '12.2.0'
 
     - name: Download and Setup SDL3 🎨
       shell: bash
