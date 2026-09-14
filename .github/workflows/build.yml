@@ -1,41 +1,51 @@
-name: Build Windows Executable
+name: Build Windows Application
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout Code 🐙
       uses: actions/checkout@v4
 
-    - name: Check repository files
-      shell: cmd
-      run: dir
+    - name: Set up GCC (MinGW) 🛠️
+      uses: egor-tisin/setup-mingw@v2
 
-    - name: Download SDL3 Windows Development Package
-      shell: powershell
+    - name: Download and Setup SDL3 🎨
+      shell: bash
       run: |
-        Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-3.2.8/SDL3-devel-3.2.8-mingw.zip" -OutFile "SDL3-mingw.zip"
-        Expand-Archive -Path "SDL3-mingw.zip" -DestinationPath "."
+        curl -sL https://github.com/libsdl-org/SDL/releases/download/release-3.2.8/SDL3-devel-3.2.8-mingw.zip -o sdl3.zip
+        unzip -q sdl3.zip
+        mv SDL3-3.2.8/x86_64-w64-mingw32 ./sdl3_dev
 
-    - name: Compile Windows Executable
-      shell: cmd
+    - name: Compile Game ⚙️
+      shell: bash
       run: |
-        g++ main.cpp -o my_game.exe -ISDL3-3.2.8/x86_64-w64-mingw32/include -LSDL3-3.2.8/x86_64-w64-mingw32/lib -lSDL3 -mwindows
+        # -mwindows removes the extra console window
+        g++ -O2 main.cpp -o SurvivalDodge.exe \
+            -I./sdl3_dev/include \
+            -L./sdl3_dev/lib \
+            -lSDL3 -mwindows
 
-    - name: Bundle Executable and DLL
-      shell: powershell
+    - name: Package with DLL and Encrypt Archive 🔐
+      shell: bash
+      env:
+        ZIP_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
       run: |
-        Copy-Item "SDL3-3.2.8/x86_64-w64-mingw32/bin/SDL3.dll" -Destination "."
-        Compress-Archive -Path "my_game.exe", "SDL3.dll" -DestinationPath "my_game_windows.zip"
+        # Copy the runtime DLL next to the executable
+        cp ./sdl3_dev/bin/SDL3.dll ./
+        
+        # Package into password-protected zip
+        zip -e -P "$ZIP_PASSWORD" SurvivalDodge_Windows.zip SurvivalDodge.exe SDL3.dll
 
-    - name: Upload Windows Build Artifact
+    - name: Upload Build Artifact 🚀
       uses: actions/upload-artifact@v4
       with:
-        name: my-game-windows
-        path: my_game_windows.zip
+        name: SurvivalDodge-Build
+        path: SurvivalDodge_Windows.zip
