@@ -13,6 +13,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Check repository files
+      shell: cmd
+      run: dir
+
     - name: Download SDL3 Windows Development Package
       shell: powershell
       run: |
