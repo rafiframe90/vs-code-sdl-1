@@ -23,6 +23,7 @@ jobs:
           mingw-w64-ucrt-x86_64-gcc
           mingw-w64-ucrt-x86_64-make
           zip
+          unzip
 
     - name: Download and Setup SDL3 🎨
       shell: msys2 {0}
