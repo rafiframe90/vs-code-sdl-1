@@ -41,16 +41,14 @@ jobs:
             -L./sdl3_dev/lib \
             -lSDL3 -mwindows
 
-    - name: Package with DLL and Encrypt Archive 🔐
+    - name: Package with DLL 📦
       shell: msys2 {0}
-      env:
-        ZIP_PASSWORD: ${{ secrets.ARCHIVE_PASSWORD }}
       run: |
         # Copy the runtime DLL next to the executable
         cp ./sdl3_dev/bin/SDL3.dll ./
         
-        # Package into password-protected zip
-        zip -e -P "$ZIP_PASSWORD" SurvivalDodge_Windows.zip SurvivalDodge.exe SDL3.dll
+        # Package into a standard zip archive
+        zip SurvivalDodge_Windows.zip SurvivalDodge.exe SDL3.dll
 
     - name: Upload Build Artifact 🚀
       uses: actions/upload-artifact@v4
