@@ -1,0 +1,42 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up MinGW
+      uses: egor-tisin/setup-mingw-gh-action@v1.2.0
+      with:
+        version: 12.2.0
+
+    - name: Download SDL3 Windows Development Package
+      shell: powershell
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/libsdl-org/SDL/releases/download/release-3.2.8/SDL3-devel-3.2.8-mingw.zip" -OutFile "SDL3-mingw.zip"
+        Expand-Archive -Path "SDL3-mingw.zip" -DestinationPath "."
+
+    - name: Compile Windows Executable
+      shell: cmd
+      run: |
+        g++ main.cpp -o my_game.exe -ISDL3-3.2.8/x86_64-w64-mingw32/include -LSDL3-3.2.8/x86_64-w64-mingw32/lib -lSDL3 -mwindows
+
+    - name: Bundle Executable and DLL
+      shell: powershell
+      run: |
+        Copy-Item "SDL3-3.2.8/x86_64-w64-mingw32/bin/SDL3.dll" -Destination "."
+        Compress-Archive -Path "my_game.exe", "SDL3.dll" -DestinationPath "my_game_windows.zip"
+
+    - name: Upload Windows Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-game-windows
+        path: my_game_windows.zip
